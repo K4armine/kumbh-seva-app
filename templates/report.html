@@ -1,0 +1,754 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Report a Problem · Kumbh Seva</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <!-- Existing project stylesheet (report-page section appended at the bottom) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="gt-body gt-report-body">
+
+  <!-- ============================================================
+       HEADER / NAVBAR
+       ============================================================ -->
+  <nav class="navbar gt-navbar sticky-top">
+    <div class="container d-flex align-items-center justify-content-between">
+      <a href="{{ url_for('index') }}" class="gt-logo d-flex align-items-center text-decoration-none">
+        <span class="gt-logo-mark" aria-hidden="true">
+          <i class="bi bi-flower2"></i>
+        </span>
+        <span class="gt-logo-text">
+          <span class="gt-logo-title">Kumbh Seva</span>
+          <span class="gt-logo-subtitle">Citizen Problem Reporting</span>
+        </span>
+      </a>
+      <a href="{{ url_for('index') }}" class="gt-btn gt-btn-ghost gt-btn-sm">
+        <i class="bi bi-house-door"></i>
+        <span class="d-none d-sm-inline">Home</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="container gt-report-main">
+
+    <!-- ============================================================
+         PROGRESS INDICATOR
+         ============================================================ -->
+    <ol class="gt-progress" id="reportProgress" aria-label="Report progress">
+      <li class="gt-progress-step is-active" data-step="1">
+        <span class="gt-step-pill">1</span>
+        <span class="gt-progress-label">Report</span>
+      </li>
+      <li class="gt-progress-step" data-step="2">
+        <span class="gt-step-pill">2</span>
+        <span class="gt-progress-label">Location</span>
+      </li>
+      <li class="gt-progress-step" data-step="3">
+        <span class="gt-step-pill">3</span>
+        <span class="gt-progress-label">Review</span>
+      </li>
+      <li class="gt-progress-step" data-step="4">
+        <span class="gt-step-pill">4</span>
+        <span class="gt-progress-label">Submit</span>
+      </li>
+    </ol>
+
+    <!-- ============================================================
+         MAIN REPORT FORM
+         ============================================================ -->
+    <form id="reportForm" class="gt-card gt-report-card" novalidate>
+
+      <!-- Hidden fields kept in sync with backend contract -->
+      <input type="hidden" id="problemTypeField" name="problem_type" value="">
+      <input type="hidden" id="problemSubtypeField" name="problem_subtype" value="">
+      <input type="hidden" id="assetIdField" name="asset_id" value="">
+      <input type="hidden" id="latitudeField" name="latitude" value="">
+      <input type="hidden" id="longitudeField" name="longitude" value="">
+      <input type="hidden" id="timestampField" name="timestamp" value="">
+
+      <!-- ---------- SELECTED CATEGORY ---------- -->
+      <section class="gt-report-section" id="categorySection">
+        <div class="gt-category-banner" id="categoryBanner">
+          <span class="gt-category-icon" id="categoryIcon">➕</span>
+          <div>
+            <h1 class="gt-category-title" id="categoryTitle">Other Problem</h1>
+            <p class="gt-category-desc" id="categoryDesc">Tell us about the problem you'd like to report.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- PHOTO UPLOAD ---------- -->
+      <section class="gt-report-section" id="photoSection">
+        <h2 class="gt-section-heading">
+          <i class="bi bi-camera-fill"></i> Photo Evidence
+          <span class="gt-required-badge">Required</span>
+        </h2>
+
+        <div class="gt-dropzone" id="photoDropzone" tabindex="0" role="button"
+             aria-label="Take or upload a photo of the problem">
+          <input type="file" id="reportPhoto" name="photo" accept="image/*" capture="environment" hidden>
+
+          <div class="gt-dropzone-content" id="dropzoneContent">
+            <div class="gt-dropzone-icon"><i class="bi bi-camera"></i></div>
+            <p class="gt-dropzone-title">📸 Take / Upload Photo</p>
+            <p class="gt-dropzone-hint">Take a clear photo showing the problem and surrounding area.</p>
+            <span class="gt-btn gt-btn-primary gt-btn-sm gt-dropzone-btn">
+              <i class="bi bi-camera-fill"></i> Open Camera / Gallery
+            </span>
+            <p class="gt-dropzone-alt">or drag and drop an image here</p>
+          </div>
+
+          <!-- Preview (hidden until an image is chosen) -->
+          <div class="gt-file-card d-none" id="photoPreviewCard">
+            <img id="photoPreviewImg" class="gt-file-thumb" alt="Selected problem photo preview">
+            <div class="gt-file-meta">
+              <p class="gt-file-name" id="photoFileName">problem.jpg</p>
+              <p class="gt-file-size" id="photoFileSize">0 MB</p>
+              <div class="gt-file-actions">
+                <button type="button" class="gt-btn gt-btn-ghost gt-btn-sm" id="replacePhotoBtn">
+                  <i class="bi bi-arrow-repeat"></i> Replace Photo
+                </button>
+                <button type="button" class="gt-btn gt-btn-danger-ghost gt-btn-sm" id="removePhotoBtn">
+                  <i class="bi bi-trash3"></i> Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gt-alert gt-alert-error d-none" id="photoErrorAlert" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span id="photoErrorText">Please upload a valid JPG, PNG or WEBP image under 10 MB.</span>
+        </div>
+
+        <!-- Photo tips -->
+        <div class="gt-tips-box">
+          <p class="gt-tips-heading"><i class="bi bi-lightbulb-fill"></i> Photo Tips</p>
+          <ul class="gt-tips-list">
+            <li>Avoid blurry photos</li>
+            <li>Capture the complete problem</li>
+            <li>Keep the asset visible</li>
+            <li>Ensure sufficient lighting</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ---------- PROBLEM TYPE ---------- -->
+      <section class="gt-report-section d-none" id="problemTypeSection">
+        <h2 class="gt-section-heading">
+          <i class="bi bi-list-check"></i> What's the problem?
+          <span class="gt-required-badge">Required</span>
+        </h2>
+
+        <div class="gt-problem-options" id="problemOptionsGrid" role="radiogroup" aria-label="Problem type"></div>
+
+        <div class="d-none" id="otherProblemWrap">
+          <label for="otherProblemText" class="gt-field-label">Describe the problem</label>
+          <textarea class="form-control gt-textarea" id="otherProblemText" rows="3"
+                    placeholder="Please describe the problem in detail..."></textarea>
+        </div>
+
+        <div class="gt-alert gt-alert-error d-none" id="problemTypeErrorAlert" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>Please select a problem type before continuing.</span>
+        </div>
+      </section>
+
+      <!-- ---------- ADDITIONAL DETAILS ---------- -->
+      <section class="gt-report-section d-none" id="detailsSection">
+        <h2 class="gt-section-heading"><i class="bi bi-card-text"></i> Additional Details</h2>
+        <label for="additionalDetails" class="gt-field-label visually-hidden">Additional details</label>
+        <textarea class="form-control gt-textarea" id="additionalDetails" name="description" rows="3"
+                  maxlength="500"
+                  placeholder="Tell us anything else that may help the maintenance team..."></textarea>
+        <div class="gt-char-count"><span id="charCount">0</span> / 500</div>
+      </section>
+
+      <!-- ---------- QR ASSET IDENTIFICATION ---------- -->
+      <section class="gt-report-section d-none" id="qrSection">
+        <h2 class="gt-section-heading"><i class="bi bi-qr-code"></i> Identify This Facility</h2>
+
+        <div class="gt-qr-panel" id="qrPanelIdle">
+          <p class="gt-field-hint">Scan the QR code on the asset, or enter its Asset ID manually.</p>
+          <div class="gt-qr-actions">
+            <button type="button" class="gt-btn gt-btn-primary gt-btn-sm" id="scanQrBtn">
+              <i class="bi bi-qr-code-scan"></i> Scan Asset QR
+            </button>
+          </div>
+
+          <div class="gt-manual-asset">
+            <label for="manualAssetId" class="gt-field-label">Asset ID (manual entry)</label>
+            <div class="gt-manual-asset-row">
+              <input type="text" class="form-control" id="manualAssetId" placeholder="e.g. PEN-GB-01">
+              <button type="button" class="gt-btn gt-btn-secondary gt-btn-sm" id="confirmManualAssetBtn">
+                <i class="bi bi-check2"></i> Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR scanner modal (modular placeholder — wire a real QR lib into openQrScanner()/closeQrScanner()) -->
+        <div class="gt-qr-modal d-none" id="qrScannerModal" role="dialog" aria-modal="true" aria-label="Scan asset QR code">
+          <div class="gt-qr-modal-inner">
+            <div class="gt-qr-viewport" id="qrScannerViewport">
+              <div class="gt-qr-frame"></div>
+              <p class="gt-qr-placeholder-text">
+                <i class="bi bi-camera-video"></i><br>
+                Camera preview will appear here once a QR scanning library is connected.
+              </p>
+            </div>
+            <div class="gt-qr-modal-actions">
+              <button type="button" class="gt-btn gt-btn-ghost gt-btn-sm" id="cancelQrScanBtn">
+                <i class="bi bi-x-lg"></i> Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Identified asset result -->
+        <div class="gt-asset-result d-none" id="assetResultCard">
+          <div class="gt-asset-result-row">
+            <span class="gt-asset-result-label">Asset ID</span>
+            <span class="gt-asset-result-value" id="assetResultId">—</span>
+          </div>
+          <div class="gt-asset-result-row">
+            <span class="gt-asset-result-label">Area</span>
+            <span class="gt-asset-result-value" id="assetResultArea">—</span>
+          </div>
+          <div class="gt-asset-result-row">
+            <span class="gt-asset-result-label">Asset</span>
+            <span class="gt-asset-result-value" id="assetResultName">—</span>
+          </div>
+          <button type="button" class="gt-btn gt-btn-ghost gt-btn-sm" id="clearAssetBtn">
+            <i class="bi bi-arrow-repeat"></i> Change
+          </button>
+        </div>
+
+        <div class="gt-alert gt-alert-error d-none" id="qrErrorAlert" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span id="qrErrorText">We couldn't identify that asset. Try scanning again or check the ID.</span>
+        </div>
+      </section>
+
+      <!-- ---------- LOCATION ---------- -->
+      <section class="gt-report-section d-none" id="locationSection">
+        <h2 class="gt-section-heading">
+          <i class="bi bi-geo-alt-fill"></i> Your Location
+          <span class="gt-required-badge">Required</span>
+        </h2>
+
+        <div class="gt-location-panel" id="locationIdle">
+          <p class="gt-field-hint">We use your location to route this report to the nearest maintenance team.</p>
+          <button type="button" class="gt-btn gt-btn-primary gt-btn-sm" id="detectLocationBtn">
+            <i class="bi bi-crosshair"></i> Detect My Location
+          </button>
+        </div>
+
+        <div class="gt-location-result d-none" id="locationResultCard">
+          <div class="gt-location-result-header">
+            <i class="bi bi-geo-alt-fill"></i>
+            <span id="locationAreaName">Panchavati, Nashik</span>
+          </div>
+          <div class="gt-location-coords">
+            <span>Latitude: <strong id="locationLat">—</strong></span>
+            <span>Longitude: <strong id="locationLng">—</strong></span>
+          </div>
+          <button type="button" class="gt-btn gt-btn-ghost gt-btn-sm" id="retryLocationBtn">
+            <i class="bi bi-arrow-repeat"></i> Detect Again
+          </button>
+
+          <!-- Map preview placeholder — swap the inner div for a Leaflet map when the library is added -->
+          <div class="gt-map-placeholder" id="mapPreview" aria-label="Map preview of your reported location">
+            <i class="bi bi-map"></i>
+            <span>Map preview</span>
+          </div>
+        </div>
+
+        <div class="gt-alert gt-alert-error d-none" id="locationErrorAlert" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span id="locationErrorText">Location permission was denied. Please enable location access or select your location manually.</span>
+        </div>
+      </section>
+
+      <!-- ---------- REVIEW ---------- -->
+      <section class="gt-report-section d-none" id="reviewSection">
+        <h2 class="gt-section-heading"><i class="bi bi-clipboard2-check"></i> Review Your Report</h2>
+
+        <div class="gt-review-list">
+          <div class="gt-review-row">
+            <span class="gt-review-label">Problem Category</span>
+            <span class="gt-review-value" id="reviewCategory">—</span>
+          </div>
+          <div class="gt-review-row">
+            <span class="gt-review-label">Problem Type</span>
+            <span class="gt-review-value" id="reviewProblemType">—</span>
+            <button type="button" class="gt-review-edit" data-edit-target="problemTypeSection">Edit</button>
+          </div>
+          <div class="gt-review-row">
+            <span class="gt-review-label">Photo</span>
+            <span class="gt-review-value" id="reviewPhoto">—</span>
+            <button type="button" class="gt-review-edit" data-edit-target="photoSection">Edit</button>
+          </div>
+          <div class="gt-review-row">
+            <span class="gt-review-label">Asset ID</span>
+            <span class="gt-review-value" id="reviewAssetId">Not identified</span>
+            <button type="button" class="gt-review-edit" data-edit-target="qrSection">Edit</button>
+          </div>
+          <div class="gt-review-row">
+            <span class="gt-review-label">Location</span>
+            <span class="gt-review-value" id="reviewLocation">—</span>
+            <button type="button" class="gt-review-edit" data-edit-target="locationSection">Edit</button>
+          </div>
+          <div class="gt-review-row">
+            <span class="gt-review-label">Additional Details</span>
+            <span class="gt-review-value" id="reviewDetails">None provided</span>
+            <button type="button" class="gt-review-edit" data-edit-target="detailsSection">Edit</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- SUBMIT ---------- -->
+      <section class="gt-report-section" id="submitSection">
+        <div class="gt-alert gt-alert-error d-none" id="submitErrorAlert" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span id="submitErrorText">Something went wrong while submitting your report. Please try again.</span>
+        </div>
+
+        <button type="submit" class="gt-btn gt-btn-primary gt-btn-submit" id="submitReportBtn" disabled>
+          <span class="gt-btn-label">
+            <i class="bi bi-exclamation-octagon-fill"></i> Submit Report
+          </span>
+          <span class="gt-btn-loading d-none">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Submitting Report...
+          </span>
+        </button>
+        <p class="gt-submit-hint" id="submitHint">Add a photo, problem type and location to continue.</p>
+      </section>
+
+    </form>
+
+    <!-- ============================================================
+         SUCCESS SCREEN
+         ============================================================ -->
+    <section class="gt-card gt-success-card d-none" id="successScreen" aria-live="polite">
+      <div class="gt-success-icon"><i class="bi bi-check-circle-fill"></i></div>
+      <h2 class="gt-success-title">Report Submitted Successfully</h2>
+      <p class="gt-success-message">Thank you for helping keep Kumbh Mela clean and safe.</p>
+
+      <div class="gt-complaint-box">
+        <span class="gt-complaint-label">Complaint ID</span>
+        <span class="gt-complaint-id" id="complaintIdText">KMB-2026-0001</span>
+      </div>
+
+      <div class="gt-success-actions">
+        <button type="button" class="gt-btn gt-btn-secondary" id="trackReportBtn">
+          <i class="bi bi-search"></i> Track My Report
+        </button>
+        <button type="button" class="gt-btn gt-btn-primary" id="reportAnotherBtn">
+          <i class="bi bi-plus-circle"></i> Report Another Problem
+        </button>
+        <a href="{{ url_for('index') }}" class="gt-btn gt-btn-ghost">
+          <i class="bi bi-house-door"></i> Back to Dashboard
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast host for non-blocking alerts -->
+  <div class="gt-toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    // Passed from Flask so report.js doesn't need to parse the URL twice server-side.
+    window.KUMBH_SEVA_PROBLEM_TYPE = "{{ problem_type|e }}";
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/report.js') }}"></script>
+</body>
+</html>
+ml>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Report a Problem · Kumbh Seva</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <!-- Existing project stylesheet (report-page section appended at the bottom) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="gt-body gt-report-body">
+
+  <!-- ============================================================
+       HEADER / NAVBAR
+       ============================================================ -->
+  <nav class="navbar gt-navbar sticky-top">
+    <div class="container d-flex align-items-center justify-content-between">
+      <a href="{{ url_for('index') }}" class="gt-logo d-flex align-items-center text-decoration-none">
+        <span class="gt-logo-mark" aria-hidden="true">
+          <i class="bi bi-flower2"></i>
+        </span>
+        <span class="gt-logo-text">
+          <span class="gt-logo-title">Kumbh Seva</span>
+          <span class="gt-logo-subtitle">Citizen Problem Reporting</span>
+        </span>
+      </a>
+      <a href="{{ url_for('index') }}" class="gt-btn gt-btn-ghost gt-btn-sm">
+        <i class="bi bi-house-door"></i>
+        <span class="d-none d-sm-inline">Home</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="container gt-report-main">
+
+    <!-- ============================================================
+         PROGRESS INDICATOR
+         ============================================================ -->
+    <ol class="gt-progress" id="reportProgress" aria-label="Report progress">
+      <li class="gt-progress-step is-active" data-step="1">
+        <span class="gt-step-pill">1</span>
+        <span class="gt-progress-label">Report</span>
+      </li>
+      <li class="gt-progress-step" data-step="2">
+        <span class="gt-step-pill">2</span>
+        <span class="gt-progress-label">Location</span>
+      </li>
+      <li class="gt-progress-step" data-step="3">
+        <span class="gt-step-pill">3</span>
+        <span class="gt-progress-label">Review</span>
+      </li>
+      <li class="gt-progress-step" data-step="4">
+        <span class="gt-step-pill">4</span>
+        <span class="gt-progress-label">Submit</span>
+      </li>
+    </ol>
+
+    <!-- ============================================================
+         MAIN REPORT FORM
+         ============================================================ -->
+    <form id="reportForm" class="gt-card gt-report-card" novalidate>
+
+      <!-- Hidden fields kept in sync with backend contract -->
+      <input type="hidden" id="problemTypeField" name="problem_type" value="">
+      <input type="hidden" id="problemSubtypeField" name="problem_subtype" value="">
+      <input type="hidden" id="assetIdField" name="asset_id" value="">
+      <input type="hidden" id="latitudeField" name="latitude" value="">
+      <input type="hidden" id="longitudeField" name="longitude" value="">
+      <input type="hidden" id="timestampField" name="timestamp" value="">
+
+      <!-- ---------- SELECTED CATEGORY ---------- -->
+      <section class="gt-report-section" id="categorySection">
+        <div class="gt-category-banner" id="categoryBanner">
+          <span class="gt-category-icon" id="categoryIcon">➕</span>
+          <div>
+            <h1 class="gt-category-title" id="categoryTitle">Other Problem</h1>
+            <p class="gt-category-desc" id="categoryDesc">Tell us about the problem you'd like to report.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- PHOTO UPLOAD ---------- -->
+      <section class="gt-report-section" id="photoSection">
+        <h2 class="gt-section-heading">
+          <i class="bi bi-camera-fill"></i> Photo Evidence
+          <span class="gt-required-badge">Required</span>
+        </h2>
+
+        <div class="gt-dropzone" id="photoDropzone" tabindex="0" role="button"
+             aria-label="Take or upload a photo of the problem">
+          <input type="file" id="reportPhoto" name="photo" accept="image/*" capture="environment" hidden>
+
+          <div class="gt-dropzone-content" id="dropzoneContent">
+            <div class="gt-dropzone-icon"><i class="bi bi-camera"></i></div>
+            <p class="gt-dropzone-title">📸 Take / Upload Photo</p>
+            <p class="gt-dropzone-hint">Take a clear photo showing the problem and surrounding area.</p>
+            <span class="gt-btn gt-btn-primary gt-btn-sm gt-dropzone-btn">
+              <i class="bi bi-camera-fill"></i> Open Camera / Gallery
+            </span>
+            <p class="gt-dropzone-alt">or drag and drop an image here</p>
+          </div>
+
+          <!-- Preview (hidden until an image is chosen) -->
+          <div class="gt-file-card d-none" id="photoPreviewCard">
+            <img id="photoPreviewImg" class="gt-file-thumb" alt="Selected problem photo preview">
+            <div class="gt-file-meta">
+              <p class="gt-file-name" id="photoFileName">problem.jpg</p>
+              <p class="gt-file-size" id="photoFileSize">0 MB</p>
+              <div class="gt-file-actions">
+                <button type="button" class="gt-btn gt-btn-ghost gt-btn-sm" id="replacePhotoBtn">
+                  <i class="bi bi-arrow-repeat"></i> Replace Photo
+                </button>
+                <button type="button" class="gt-btn gt-btn-danger-ghost gt-btn-sm" id="removePhotoBtn">
+                  <i class="bi bi-trash3"></i> Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gt-alert gt-alert-error d-none" id="photoErrorAlert" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span id="photoErrorText">Please upload a valid JPG, PNG or WEBP image under 10 MB.</span>
+        </div>
+
+        <!-- Photo tips -->
+        <div class="gt-tips-box">
+          <p class="gt-tips-heading"><i class="bi bi-lightbulb-fill"></i> Photo Tips</p>
+          <ul class="gt-tips-list">
+            <li>Avoid blurry photos</li>
+            <li>Capture the complete problem</li>
+            <li>Keep the asset visible</li>
+            <li>Ensure sufficient lighting</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ---------- PROBLEM TYPE ---------- -->
+      <section class="gt-report-section d-none" id="problemTypeSection">
+        <h2 class="gt-section-heading">
+          <i class="bi bi-list-check"></i> What's the problem?
+          <span class="gt-required-badge">Required</span>
+        </h2>
+
+        <div class="gt-problem-options" id="problemOptionsGrid" role="radiogroup" aria-label="Problem type"></div>
+
+        <div class="d-none" id="otherProblemWrap">
+          <label for="otherProblemText" class="gt-field-label">Describe the problem</label>
+          <textarea class="form-control gt-textarea" id="otherProblemText" rows="3"
+                    placeholder="Please describe the problem in detail..."></textarea>
+        </div>
+
+        <div class="gt-alert gt-alert-error d-none" id="problemTypeErrorAlert" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>Please select a problem type before continuing.</span>
+        </div>
+      </section>
+
+      <!-- ---------- ADDITIONAL DETAILS ---------- -->
+      <section class="gt-report-section d-none" id="detailsSection">
+        <h2 class="gt-section-heading"><i class="bi bi-card-text"></i> Additional Details</h2>
+        <label for="additionalDetails" class="gt-field-label visually-hidden">Additional details</label>
+        <textarea class="form-control gt-textarea" id="additionalDetails" name="description" rows="3"
+                  maxlength="500"
+                  placeholder="Tell us anything else that may help the maintenance team..."></textarea>
+        <div class="gt-char-count"><span id="charCount">0</span> / 500</div>
+      </section>
+
+      <!-- ---------- QR ASSET IDENTIFICATION ---------- -->
+      <section class="gt-report-section d-none" id="qrSection">
+        <h2 class="gt-section-heading"><i class="bi bi-qr-code"></i> Identify This Facility</h2>
+
+        <div class="gt-qr-panel" id="qrPanelIdle">
+          <p class="gt-field-hint">Scan the QR code on the asset, or enter its Asset ID manually.</p>
+          <div class="gt-qr-actions">
+            <button type="button" class="gt-btn gt-btn-primary gt-btn-sm" id="scanQrBtn">
+              <i class="bi bi-qr-code-scan"></i> Scan Asset QR
+            </button>
+          </div>
+
+          <div class="gt-manual-asset">
+            <label for="manualAssetId" class="gt-field-label">Asset ID (manual entry)</label>
+            <div class="gt-manual-asset-row">
+              <input type="text" class="form-control" id="manualAssetId" placeholder="e.g. PEN-GB-01">
+              <button type="button" class="gt-btn gt-btn-secondary gt-btn-sm" id="confirmManualAssetBtn">
+                <i class="bi bi-check2"></i> Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR scanner modal (modular placeholder — wire a real QR lib into openQrScanner()/closeQrScanner()) -->
+        <div class="gt-qr-modal d-none" id="qrScannerModal" role="dialog" aria-modal="true" aria-label="Scan asset QR code">
+          <div class="gt-qr-modal-inner">
+            <div class="gt-qr-viewport" id="qrScannerViewport">
+              <div class="gt-qr-frame"></div>
+              <p class="gt-qr-placeholder-text">
+                <i class="bi bi-camera-video"></i><br>
+                Camera preview will appear here once a QR scanning library is connected.
+              </p>
+            </div>
+            <div class="gt-qr-modal-actions">
+              <button type="button" class="gt-btn gt-btn-ghost gt-btn-sm" id="cancelQrScanBtn">
+                <i class="bi bi-x-lg"></i> Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Identified asset result -->
+        <div class="gt-asset-result d-none" id="assetResultCard">
+          <div class="gt-asset-result-row">
+            <span class="gt-asset-result-label">Asset ID</span>
+            <span class="gt-asset-result-value" id="assetResultId">—</span>
+          </div>
+          <div class="gt-asset-result-row">
+            <span class="gt-asset-result-label">Area</span>
+            <span class="gt-asset-result-value" id="assetResultArea">—</span>
+          </div>
+          <div class="gt-asset-result-row">
+            <span class="gt-asset-result-label">Asset</span>
+            <span class="gt-asset-result-value" id="assetResultName">—</span>
+          </div>
+          <button type="button" class="gt-btn gt-btn-ghost gt-btn-sm" id="clearAssetBtn">
+            <i class="bi bi-arrow-repeat"></i> Change
+          </button>
+        </div>
+
+        <div class="gt-alert gt-alert-error d-none" id="qrErrorAlert" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span id="qrErrorText">We couldn't identify that asset. Try scanning again or check the ID.</span>
+        </div>
+      </section>
+
+      <!-- ---------- LOCATION ---------- -->
+      <section class="gt-report-section d-none" id="locationSection">
+        <h2 class="gt-section-heading">
+          <i class="bi bi-geo-alt-fill"></i> Your Location
+          <span class="gt-required-badge">Required</span>
+        </h2>
+
+        <div class="gt-location-panel" id="locationIdle">
+          <p class="gt-field-hint">We use your location to route this report to the nearest maintenance team.</p>
+          <button type="button" class="gt-btn gt-btn-primary gt-btn-sm" id="detectLocationBtn">
+            <i class="bi bi-crosshair"></i> Detect My Location
+          </button>
+        </div>
+
+        <div class="gt-location-result d-none" id="locationResultCard">
+          <div class="gt-location-result-header">
+            <i class="bi bi-geo-alt-fill"></i>
+            <span id="locationAreaName">Panchavati, Nashik</span>
+          </div>
+          <div class="gt-location-coords">
+            <span>Latitude: <strong id="locationLat">—</strong></span>
+            <span>Longitude: <strong id="locationLng">—</strong></span>
+          </div>
+          <button type="button" class="gt-btn gt-btn-ghost gt-btn-sm" id="retryLocationBtn">
+            <i class="bi bi-arrow-repeat"></i> Detect Again
+          </button>
+
+          <!-- Map preview placeholder — swap the inner div for a Leaflet map when the library is added -->
+          <div class="gt-map-placeholder" id="mapPreview" aria-label="Map preview of your reported location">
+            <i class="bi bi-map"></i>
+            <span>Map preview</span>
+          </div>
+        </div>
+
+        <div class="gt-alert gt-alert-error d-none" id="locationErrorAlert" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span id="locationErrorText">Location permission was denied. Please enable location access or select your location manually.</span>
+        </div>
+      </section>
+
+      <!-- ---------- REVIEW ---------- -->
+      <section class="gt-report-section d-none" id="reviewSection">
+        <h2 class="gt-section-heading"><i class="bi bi-clipboard2-check"></i> Review Your Report</h2>
+
+        <div class="gt-review-list">
+          <div class="gt-review-row">
+            <span class="gt-review-label">Problem Category</span>
+            <span class="gt-review-value" id="reviewCategory">—</span>
+          </div>
+          <div class="gt-review-row">
+            <span class="gt-review-label">Problem Type</span>
+            <span class="gt-review-value" id="reviewProblemType">—</span>
+            <button type="button" class="gt-review-edit" data-edit-target="problemTypeSection">Edit</button>
+          </div>
+          <div class="gt-review-row">
+            <span class="gt-review-label">Photo</span>
+            <span class="gt-review-value" id="reviewPhoto">—</span>
+            <button type="button" class="gt-review-edit" data-edit-target="photoSection">Edit</button>
+          </div>
+          <div class="gt-review-row">
+            <span class="gt-review-label">Asset ID</span>
+            <span class="gt-review-value" id="reviewAssetId">Not identified</span>
+            <button type="button" class="gt-review-edit" data-edit-target="qrSection">Edit</button>
+          </div>
+          <div class="gt-review-row">
+            <span class="gt-review-label">Location</span>
+            <span class="gt-review-value" id="reviewLocation">—</span>
+            <button type="button" class="gt-review-edit" data-edit-target="locationSection">Edit</button>
+          </div>
+          <div class="gt-review-row">
+            <span class="gt-review-label">Additional Details</span>
+            <span class="gt-review-value" id="reviewDetails">None provided</span>
+            <button type="button" class="gt-review-edit" data-edit-target="detailsSection">Edit</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- SUBMIT ---------- -->
+      <section class="gt-report-section" id="submitSection">
+        <div class="gt-alert gt-alert-error d-none" id="submitErrorAlert" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span id="submitErrorText">Something went wrong while submitting your report. Please try again.</span>
+        </div>
+
+        <button type="submit" class="gt-btn gt-btn-primary gt-btn-submit" id="submitReportBtn" disabled>
+          <span class="gt-btn-label">
+            <i class="bi bi-exclamation-octagon-fill"></i> Submit Report
+          </span>
+          <span class="gt-btn-loading d-none">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Submitting Report...
+          </span>
+        </button>
+        <p class="gt-submit-hint" id="submitHint">Add a photo, problem type and location to continue.</p>
+      </section>
+
+    </form>
+
+    <!-- ============================================================
+         SUCCESS SCREEN
+         ============================================================ -->
+    <section class="gt-card gt-success-card d-none" id="successScreen" aria-live="polite">
+      <div class="gt-success-icon"><i class="bi bi-check-circle-fill"></i></div>
+      <h2 class="gt-success-title">Report Submitted Successfully</h2>
+      <p class="gt-success-message">Thank you for helping keep Kumbh Mela clean and safe.</p>
+
+      <div class="gt-complaint-box">
+        <span class="gt-complaint-label">Complaint ID</span>
+        <span class="gt-complaint-id" id="complaintIdText">KMB-2026-0001</span>
+      </div>
+
+      <div class="gt-success-actions">
+        <button type="button" class="gt-btn gt-btn-secondary" id="trackReportBtn">
+          <i class="bi bi-search"></i> Track My Report
+        </button>
+        <button type="button" class="gt-btn gt-btn-primary" id="reportAnotherBtn">
+          <i class="bi bi-plus-circle"></i> Report Another Problem
+        </button>
+        <a href="{{ url_for('index') }}" class="gt-btn gt-btn-ghost">
+          <i class="bi bi-house-door"></i> Back to Dashboard
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast host for non-blocking alerts -->
+  <div class="gt-toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    // Passed from Flask so report.js doesn't need to parse the URL twice server-side.
+    window.KUMBH_SEVA_PROBLEM_TYPE = "{{ problem_type|e }}";
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/report.js') }}"></script>
+</body>
+</html>
+
